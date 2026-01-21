@@ -1,0 +1,26 @@
+---
+- name: Create a new admin user (engineer)
+  user:
+    name: engineer                  # root 대신 다른 계정을 만들어서 사용하자.
+    password: '$6$fNfdkyq.mTzOjnQX$tLJZHWW5Xd0r0qnFWWM35vGmHcd/D7kBz2FAyR/Ja9hyRS1ZeZ5AVAHcVDbJTjfIS.4Nm4q0XXEGoHvDG/C1Y1' # 절대 평문으로 넣지 말고 해시로 변환해서 넣기. 깃허브에서 공개될수있음. 실습용이니까.
+    groups: wheel                   # wheel 그룹은 관리자 그룹
+    append: yes                     # 기존 그룹 유지하면서 추가
+    shell: /bin/bash                # 기본 쉘 지정
+    state: present
+
+- name: Set up password-less sudo for engineer
+  copy:
+    dest: /etc/sudoers.d/engineer
+    content: "engineer ALL=(ALL) NOPASSWD: ALL"
+    owner: root
+    group: root
+    mode: '0440'
+    validate: 'visudo -cf %s'       # [실무 팁] 문법 틀리면 sudo가 망가지는 걸 방지하는 검증 옵션
+
+- name: Deploy SSH Public Key to engineer user
+  authorized_key:
+    user: engineer
+    state: present
+    key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+    # Bastion의 root 공개키를 engineer계정에 심어주기.
+    # 이제 bastion의 root는 engineer로 로그인가능.

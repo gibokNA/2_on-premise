@@ -1,0 +1,86 @@
+---
+# 1. hosts 배포
+- name: Configure /etc/hosts file
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: '0644'
+
+# 2. 시간동기화 (Chrony)
+- name: Set Timezone to Asia/Seoul
+  timezone:
+    name: Asia/Seoul
+
+- name: Install chrony for NTP
+  dnf:
+    name: chrony
+    state: present
+
+- name: Ensure chronyd is running and enabled
+  service:
+    name: chronyd
+    state: started
+    enabled: yes
+
+# 3. Swap 끄기 (K8s 필수 조건 - 골든이미지에서 했어도 확실하게!!!)
+- name: Disable SWAP in runtime
+  command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+
+- name: Disable SWAP in fstab (Permanent)
+  replace:
+    path: /etc/fstab
+    regexp: '^([^#].*swap.*)$'
+    replace: '# \1'
+
+# 이거 없으면 4번에서 오류남. 추가해주기.
+- name: Install python3-libselinux for Ansible module
+  dnf:
+    name: python3-libselinux
+    state: present
+
+# 4. 방화벽 & SELinux 끄기 (일단 빠른 구현을 위해서.)
+- name: Stop and disable firewalld
+  service:
+    name: firewalld
+    state: stopped
+    enabled: no
+
+- name: Disable SELinux
+  selinux:
+    state: disabled
+
+# 5. K8s를 위한 커널 모듈 로드 (네트워크 브릿지 관련)
+- name: Load kernel modules for K8s (overlay, br_netfilter)
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - overlay
+    - br_netfilter
+
+- name: Add kernel modules to load on boot
+  copy:
+    dest: /etc/modules-load.d/k8s.conf
+    content: |
+      overlay
+      br_netfilter
+
+# 6. K8s를 위한 커널 파라미터 튜닝 (IP Forwarding)
+- name: Set sysctl parameters for K8s
+  sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+    sysctl_file: /etc/sysctl.d/k8s.conf
+  loop:
+    - { key: 'net.bridge.bridge-nf-call-iptables', value: '1' }
+    - { key: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
+    - { key: 'net.ipv4.ip_forward', value: '1' }
+
+# 7. 사용자 및 보안 설정 (새로 추가)
+- name: Import User Management Tasks
+  import_tasks: users.yml
