@@ -1,0 +1,61 @@
+---
+# 1. 패키지 설치
+- name: Install MariaDB Server and Python library
+  dnf:
+    name:
+      - mariadb-server
+      - python3-PyMySQL  # Ansible mysql_user 모듈 사용을 위해 필수
+    state: present
+
+# 2. 설정 파일 배포 (템플릿 사용)
+- name: Configure my.cnf
+  template:
+    src: my.cnf.j2
+    dest: /etc/my.cnf.d/server.cnf # Rocky 9은 보통 여기에 설정을 추가함
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart MariaDB  # [연결] 파일이 바뀌면 핸들러를 호출해라!
+
+# 3. 서비스 시작
+- name: Start and Enable MariaDB Service
+  service:
+    name: mariadb
+    state: started
+    enabled: yes
+
+# 비밀번호 먼저 설정.
+- name: Set MariaDB Root Password
+  mysql_user:
+    name: root
+    password: "{{ db_root_password }}"
+    host_all: yes
+    check_implicit_admin: yes
+    state: present
+
+# 그 다음에 설정 파일 생성
+- name: Create .my.cnf for root
+  template:
+    src: root.cnf.j2
+    dest: /root/.my.cnf
+    owner: root
+    group: root
+    mode: '0600'
+
+# 5. 애플리케이션용 DB 및 유저 생성
+- name: Create Application Database
+  mysql_db:
+    name: "{{ app_db_name }}"
+    state: present
+    login_user: root
+    login_password: "{{ db_root_password }}"
+
+- name: Create Application User
+  mysql_user:
+    name: "{{ app_db_user }}"
+    password: "{{ app_db_pass }}"
+    priv: "{{ app_db_name }}.*:ALL" # 해당 DB에 모든 권한 부여
+    host: "%"                       # 외부(Web Server)에서 접속 허용
+    state: present
+    login_user: root
+    login_password: "{{ db_root_password }}"

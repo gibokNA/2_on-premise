@@ -1,0 +1,7 @@
+---
+- name: Setup MariaDB Cluster Nodes
+  hosts: db_all  # inventory.ini의 [db_all] 그룹 (31, 32번 서버)
+  become: yes
+  
+  roles:
+    - database

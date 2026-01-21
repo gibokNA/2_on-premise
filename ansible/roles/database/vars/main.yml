@@ -1,0 +1,9 @@
+---
+# MariaDB 설정 변수들
+db_root_password: "password123!"    # DB 루트 비밀번호. 이거 실무에서는 노출안되게 관리. 깃헙 secret변수나 환경변수로 주입등. 일단 이거 깃헙에서 올라갈순있음. 실습 허용.
+app_db_name: "wms_db"               # 생성할 애플리케이션 DB 이름 (예: 창고관리시스템)
+app_db_user: "wms_user"             # 애플리케이션 접속 계정
+app_db_pass: "wms_pass"             # 애플리케이션 접속 암호
+# gitignore에서 제외처리 할수도 있긴한데... 실제 운영모델아니니까.. 일단 등록.
+
+# 나중에 github action으로 실행된다고 하면 외부에서 주입해주는게 모범사례겠네. 그 뭐냐 secret 변수? 설정하는거 있던거같던데. 설정후 환경변수처럼 사용.
