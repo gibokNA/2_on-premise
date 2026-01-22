@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wms-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: wms.local        # 가상의 도메인 주소 사용
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: wms-service
+            port:
+              number: 80

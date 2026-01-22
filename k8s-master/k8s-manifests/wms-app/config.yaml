@@ -1,0 +1,22 @@
+# 1. 일반 설정 (ConfigMap)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wms-config
+data:
+  # DB VIP (Keepalived로 띄운 IP)
+  DB_HOST: "192.168.100.30"
+  DB_NAME: "wms_db"
+  DB_USER: "wms_user"
+
+---
+# 2. 보안 설정 (Secret) - Base64 인코딩 필요 없음 (stringData 사용 시)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wms-secret
+type: Opaque
+stringData:
+  # Ansible에서 설정했던 비밀번호
+  DB_PASSWORD: "wms_pass"
+  # 실무에서는 비밀번호같이 민감한 정보는 Secret 같은 객체를 사용하는게 좋음.
