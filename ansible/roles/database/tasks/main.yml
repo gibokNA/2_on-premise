@@ -25,13 +25,14 @@
     enabled: yes
 
 # 비밀번호 먼저 설정.
-- name: Set MariaDB Root Password
-  mysql_user:
-    name: root
-    password: "{{ db_root_password }}"
-    host_all: yes
-    check_implicit_admin: yes
-    state: present
+#- name: Set MariaDB Root Password
+#  mysql_user:
+#    name: root
+#    password: "{{ db_root_password }}"
+#    host_all: yes
+#    check_implicit_admin: yes
+#    state: present
+# 이부분 로컬/수동으로 하면 성공하는데 ansible 로하면 실패하네. 환경타는듯. 일단 수동설정해주고 나머지 진행하자.
 
 # 그 다음에 설정 파일 생성
 - name: Create .my.cnf for root
@@ -59,3 +60,9 @@
     state: present
     login_user: root
     login_password: "{{ db_root_password }}"
+
+# 8. 복제 계정 생성 (새로 추가)
+- name: Configure Replication User
+  import_tasks: replication.yml
+  when: inventory_hostname in groups['db_master'] 
+  # 복제 계정은 Master에만 있으면됨

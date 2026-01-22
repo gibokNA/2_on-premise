@@ -1,0 +1,10 @@
+---
+- name: Create Replication User
+  mysql_user:
+    name: "repl"                 # 복제 전용 아이디
+    password: "repl_password"    # 복제 전용 비밀번호 (실무에선 좀더 복잡하게!!!)
+    host: "%"                    # 어디서든 접속 가능 (보안상 Slave IP만 적는게 좋음)
+    priv: "*.*:REPLICATION SLAVE" # 복제 권한만 부여
+    state: present
+    login_user: root
+    login_password: "{{ db_root_password }}"

@@ -1,0 +1,7 @@
+---
+- name: Setup HA (Keepalived) for DB Cluster
+  hosts: db_all
+  become: yes
+  
+  roles:
+    - keepalived

@@ -1,0 +1,41 @@
+global_defs {
+    router_id {{ inventory_hostname }}
+}
+
+# 1. DB 상태 점검 스크립트 정의
+vrrp_script check_db {
+    script "/etc/keepalived/check_db.sh"
+    interval 2   # 2초마다 검사
+    weight -5    # 실패 시 우선순위를 5점 깎음 (101 -> 96이 되어 Slave(100)보다 낮아짐)
+}
+
+# 2. VRRP 인스턴스 정의
+vrrp_instance VI_1 {
+    # 192.168.100.31(Master)이면 MASTER 상태, 아니면 BACKUP 상태
+    state {{ 'MASTER' if inventory_hostname == '192.168.100.31' else 'BACKUP' }}
+    
+    # 실행환경의 네트워크 인터페이스 이름
+    interface ens160
+    
+    virtual_router_id 51      # 고유 ID (두 서버가 같아야 함)
+    
+    # 192.168.100.31(Master)이면 101점, 아니면 100점
+    priority {{ '101' if inventory_hostname == '192.168.100.31' else '100' }}
+    
+    advert_int 1              # 1초마다 생존신호 전송
+    
+    authentication {
+        auth_type PASS
+        auth_pass 1111        # 인증 비밀번호 (단순 텍스트)
+    }
+
+    # 3. VIP 설정
+    virtual_ipaddress {
+        192.168.100.30
+    }
+
+    # 4. 스크립트 등록
+    track_script {
+        check_db
+    }
+}
