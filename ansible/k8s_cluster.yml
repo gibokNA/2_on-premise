@@ -1,0 +1,7 @@
+---
+- name: Setup Kubernetes Cluster Nodes
+  hosts: k8s_all  # inventory.ini의 [k8s_all] 그룹 (Master 1대 + Worker 2대)
+  become: yes
+  
+  roles:
+    - containerd  # 방금 만든 런타임 설치 역할

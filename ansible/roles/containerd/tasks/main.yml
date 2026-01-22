@@ -1,0 +1,47 @@
+---
+# 1. 필수 유틸리티 설치 (yum-config-manager 사용 위함)
+- name: Install dnf-utils
+  dnf:
+    name: dnf-utils
+    state: present
+
+# 2. Docker 공식 저장소 추가 (최신 containerd를 얻기 위해)
+- name: Add Docker repository
+  command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+  args:
+    creates: /etc/yum.repos.d/docker-ce.repo # 파일이 있으면 실행 안 함 (멱등성)
+
+# 3. containerd 설치
+- name: Install containerd.io
+  dnf:
+    name: containerd.io
+    state: present
+
+# 4. 설정 디렉토리 생성
+- name: Create containerd directory
+  file:
+    path: /etc/containerd
+    state: directory
+
+# 5. 기본 설정 파일 생성
+# containerd config default 명령어로 모든 기본 설정을 뽑아냄
+- name: Generate default config.toml
+  shell: containerd config default > /etc/containerd/config.toml
+  # creates 옵션을 제거하여 매번 다시 생성하게 함
+
+# 6. SystemdCgroup 설정 켜기
+# 기본값은 false인데, 이를 true로 바꿔야 K8s(kubelet)와 충돌이 안남
+# 정규식(regexp)을 사용해 해당 라인을 찾아 교체.
+- name: Configure SystemdCgroup = true
+  replace:
+    path: /etc/containerd/config.toml
+    regexp: 'SystemdCgroup = false'
+    replace: 'SystemdCgroup = true'
+  notify: Restart containerd
+
+# 7. 서비스 시작
+- name: Enable and Start containerd
+  service:
+    name: containerd
+    state: started
+    enabled: yes

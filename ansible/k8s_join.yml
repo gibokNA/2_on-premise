@@ -1,0 +1,39 @@
+---
+#  Play 1: 마스터에서 토큰 생성 및 명령어 추출 
+- name: Generate Join Command on Master
+  hosts: k8s_master
+  become: yes
+  tasks:
+    - name: Get join command
+      # 기존 토큰을 찾지 않고, 안전하게 새로운 토큰과 명령어를 생성
+      command: kubeadm token create --print-join-command
+      register: join_command_raw
+
+    - name: Set join command as a fact
+      # 다른 Play(워커들)에서 갖다 쓸 수 있도록 변수(dummy_host)에 저장
+      set_fact:
+        join_command: "{{ join_command_raw.stdout }}"
+
+
+#  Play 2: 워커 노드 조인 실행 
+- name: Join Worker Nodes to Cluster
+  hosts: k8s_worker
+  become: yes
+  tasks:
+    - name: Check if node is already joined
+      # /etc/kubernetes/kubelet.conf 파일이 있으면 이미 조인된 상태로 간주
+      stat:
+        path: /etc/kubernetes/kubelet.conf
+      register: kubelet_conf
+
+    - name: Run kubeadm join
+      # Play 1에서 만든 변수를 가져와서 실행
+      # hostvars['그룹의첫번째호스트']['변수명'] 문법을 사용
+      command: "{{ hostvars[groups['k8s_master'][0]]['join_command'] }}"
+      when: not kubelet_conf.stat.exists  # 파일이 없을 때만 실행 (멱등성 보장)
+      register: join_result
+
+    - name: Display join result
+      debug:
+        msg: "{{ join_result.stdout }}"
+      when: join_result.changed

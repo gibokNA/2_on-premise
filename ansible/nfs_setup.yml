@@ -1,0 +1,17 @@
+---
+# 1. NFS 서버 구성 (Monitor Node)
+- name: Setup NFS Server
+  hosts: monitor
+  become: yes
+  roles:
+    - nfs_server
+
+# 2. NFS 클라이언트 유틸리티 설치 (All K8s Nodes)
+- name: Install NFS Utils on K8s Nodes
+  hosts: k8s_all
+  become: yes
+  tasks:
+    - name: Install nfs-utils
+      dnf:
+        name: nfs-utils
+        state: present

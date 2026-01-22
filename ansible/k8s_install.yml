@@ -1,0 +1,9 @@
+---
+- name: Install Kubernetes Binaries on All Nodes
+  hosts: k8s_all  # 마스터, 워커 모두 포함
+  become: yes
+  
+  roles:
+    - common       # 혹시 빠진 설정 있을까봐 (Swap Off 등) 안전장치
+    - containerd   # 런타임 확인
+    - kubernetes   # 방금 만든 역할

@@ -1,0 +1,25 @@
+---
+- name: Install NFS Utilities
+  dnf:
+    name: nfs-utils
+    state: present
+
+- name: Create NFS Export Directory
+  file:
+    path: /srv/nfs/k8s
+    state: directory
+    mode: '0777'  # 실무에선 좀더 엄격한 권한 적용. 일다 실습용으로 권한 풀어주기.
+
+- name: Configure /etc/exports
+  copy:
+    dest: /etc/exports
+    content: |
+      # 모든 네트워크(*)에서 접속 허용, 읽기/쓰기(rw), 루트 권한 인정(no_root_squash)
+      /srv/nfs/k8s *(rw,sync,no_root_squash,no_subtree_check)
+  notify: Restart NFS Server
+
+- name: Enable and Start NFS Server
+  service:
+    name: nfs-server
+    state: started
+    enabled: yes
