@@ -34,6 +34,25 @@ prometheus:
             requests:
               storage: 5Gi
 
-# 3. 불필요한 컴포넌트 비활성화 (자원 절약)
+# 3. Alertmanager 설정 (활성화 및 Discord 연동)
 alertmanager:
-  enabled: false  # 일단 모니터링 먼저 구축하고 알람은 나중에 설정하자.
+  enabled: true
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ['alertname', 'job']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 3h
+      receiver: 'discord-webhook'
+      routes:
+      - match:
+          alertname: Watchdog
+        receiver: 'null' # Watchdog은 시스템 생존신고용 알람인데 시끄러우니 일단 무시.
+    receivers:
+    - name: 'null'
+    - name: 'discord-webhook'
+      discord_configs:
+      - webhook_url: 'https://discord.com/api/webhooks/1464255043128791214/LrY3YLzduMBcASeuhT0W1zbJsvRkKv7RJ9thcByG8S-h3mFMxTHBh9YRCYyAUk4MqMp-'
+        send_resolved: true # 해결되면 "해결됨" 알람도 보냄

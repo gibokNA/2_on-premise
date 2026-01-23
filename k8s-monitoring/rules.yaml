@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: wms-app-rules
+  namespace: monitoring
+  labels:
+    # 이 라벨이 있어야 Prometheus가 규칙읽음.
+    # 설치된 Helm 차트 이름(release)과 일치해야함. (monitoring-stack)
+    release: monitoring-stack
+    app: kube-prometheus-stack
+spec:
+  groups:
+  - name: wms.rules
+    rules:
+    - alert: WmsAppHighCpu
+      # wms-app 파드의 CPU 사용량이 0.1 (10%) 보다 크면
+      expr: sum(rate(container_cpu_usage_seconds_total{namespace="default", pod=~"wms-app.*"}[1m])) by (pod) > 0.1
+      for: 1m  # 1분 동안 계속되면 알람 발송
+      labels:
+        severity: critical
+      annotations:
+        summary: "High CPU usage detected on {{ $labels.pod }}"
+        description: "Pod {{ $labels.pod }} is using heavily CPU."
