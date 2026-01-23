@@ -5,9 +5,6 @@ const os = require('os');
 const app = express();
 const PORT = 8080;
 
-throw new Error("Critical DB Connection Failure! System Crash!");
-//강제오류 발생
-
 // 환경 변수에서 DB 접속 정보 가져오기 (없으면 기본값 사용)
 const dbConfig = {
   host: process.env.DB_HOST || '192.168.100.30', // Keepalived VIP
