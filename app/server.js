@@ -23,6 +23,7 @@ app.get('/', async (req, res) => {
     const dbVersion = rows[0].version;
     await connection.end();
 
+    // CI/CD 트리거용 주석.
     // 3. 결과 출력 (HTML)
     res.send(`
       <h1>🚀 WMS App v1.0</h1>
