@@ -1,4 +1,24 @@
-.terraform/
+# 1. OS 및 에디터 임시 파일
+.DS_Store
+*.swp
+*.log
+
+# 2. Ansible 관련
+*.retry
 *.tfstate
 *.tfstate.backup
+.vault_pass
+
+# 3. Node.js 관련
+node_modules/
+npm-debug.log
+
+# 4. 민감 정보
+*.pem
+id_rsa
+id_rsa.pub
+known_hosts
+/ansible/roles/common/files/id_rsa*
+
+# 5. 기타
 iso
