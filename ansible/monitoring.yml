@@ -1,0 +1,7 @@
+---
+- name: Deploy Zabbix Agents to All Nodes
+  hosts: all_servers  # 인벤토리에 있는 모든 서버 대상
+  become: yes
+  
+  roles:
+    - zabbix_agent

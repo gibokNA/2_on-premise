@@ -1,0 +1,13 @@
+# Zabbix Server IP (Monitor Node)
+Server=192.168.100.40
+ServerActive=192.168.100.40
+
+# 각 서버의 호스트네임을 식별자로 사용
+Hostname={{ inventory_hostname }}
+
+# 기본 로그 및 PID 설정
+LogFile=/var/log/zabbix/zabbix_agent2.log
+LogFileSize=0
+PidFile=/run/zabbix/zabbix_agent2.pid
+Include=/etc/zabbix/zabbix_agent2.d/*.conf
+ControlSocket=/tmp/agent.sock
