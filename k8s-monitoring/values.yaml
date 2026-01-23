@@ -1,0 +1,39 @@
+# 1. Grafana 설정
+grafana:
+  adminPassword: "admin"
+  
+  # NFS 스토리지 연결 (대시보드 설정 저장용)
+  persistence:
+    enabled: true
+    storageClassName: "nfs-client"  # 이전에 만들었던 스토리지 클래스 이름
+    accessModes:
+      - ReadWriteMany
+    size: 1Gi
+
+  # 외부 접속용 Ingress 설정
+  ingress:
+    enabled: true
+    ingressClassName: nginx         # Ingress Controller
+    hosts:
+      - grafana.wms.local           # 접속할 도메인 주소
+    path: /
+
+# 2. Prometheus 설정
+prometheus:
+  prometheusSpec:
+    # 데이터 보존 기간
+    retention: 7d
+    
+    # NFS 스토리지 연결 (메트릭 데이터 저장용)
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: "nfs-client"
+          accessModes: ["ReadWriteMany"]
+          resources:
+            requests:
+              storage: 5Gi
+
+# 3. 불필요한 컴포넌트 비활성화 (자원 절약)
+alertmanager:
+  enabled: false  # 일단 모니터링 먼저 구축하고 알람은 나중에 설정하자.
